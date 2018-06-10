@@ -6,9 +6,10 @@ import xlrd
 from xlutils.copy import copy
 from functools import partial
 
-pool_name = "B11*"
+pool = "FlexPes"
 db = tango.Database()
-elements = get_elements(pool_name, db)
+elements = get_elements(pool, db)
+print(elements)
 aliases = generate_aliases_mapping(elements, db)
 ids = generate_id_mapping(elements, db)
 ctrl_ids = generate_prop_mapping(elements, db, 'ctrl_id')
@@ -22,10 +23,12 @@ w_workbook = copy(r_workbook)
 controllers = [k for k, v in classes.iteritems() if v == "Controller"]
 motors = [k for k, v in classes.iteritems() if v == "Motor"]
 pseudos = [k for k, v in classes.iteritems() if v == "PseudoMotor"]
-pool_name = "b110a/pool/01"
+pool_name = "flexpes/pool/01"
+pool_server = "Pool/FlexPes"
 controller_sheet = w_workbook.get_sheet(3)
 motor_sheet = w_workbook.get_sheet(4)
 pseudo_sheet = w_workbook.get_sheet(5)
+pool_sheet = w_workbook.get_sheet(1)
 
 
 default_properties = [
@@ -147,7 +150,25 @@ def motor_data(name, mot_type):
             mot_attributes)
 
 
+def proceed_pool(name, sheet):
+    # get_properties
+    host = ":".join((db.get_db_host(), str(db.get_db_port())))
+    pool_alias = db.get_alias_from_device(pool_name)
+    prop = str(db.get_device_property(pool_name, "PoolPath")["PoolPath"])
+    line = ("Pool",
+            host,
+            pool_server,
+            '',      # Description
+            pool_alias,   # Alias
+            pool_name,
+            prop)
+    write_line(sheet, 1, line)
+
+
 proceed_motors(motors, motor_sheet)
 proceed_pseudos(pseudos, pseudo_sheet)
 proceed_controllers(controllers, controller_sheet)
+proceed_pool(pool_name, pool_sheet)
+
+
 w_workbook.save("template2.xls")

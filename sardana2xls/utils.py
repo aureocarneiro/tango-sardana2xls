@@ -101,22 +101,22 @@ if __name__ == "__main__":
     ctrl_ids = generate_prop_mapping(elements, db, 'ctrl_id')
     motor_ids = generate_prop_mapping(elements, db, 'motor_role_ids')
     pseudo_ids = generate_prop_mapping(elements, db, 'pseudo_motor_role_ids')
-    # import networkx as nx
-    # import matplotlib.pyplot as plt
+    import networkx as nx
+    import matplotlib.pyplot as plt
     # import pydot
-    # G = nx.Graph()
-    # G.add_nodes_from(ids.values()
-    #                  )
+    G = nx.Graph()
+    G.add_nodes_from(ids.values()
+                     )
 
-    # def add_edge(iterable):
-    #     for name, elems in iterable.items():
-    #         for e in elems:
-    #             G.add_edge(name, ids[e])
-    # add_edge(motor_ids)
-    # add_edge(pseudo_ids)
-    # add_edge(ctrl_ids)
+    def add_edge(iterable):
+        for name, elems in iterable.items():
+            for e in elems:
+                G.add_edge(name, ids[e])
+    add_edge(motor_ids)
+    add_edge(pseudo_ids)
+    add_edge(ctrl_ids)
 
-    # # nx.draw(G, node_size=100, cmap=plt.cm.Blues,
-    #         node_color=range(len(G)),
-    #         prog='dot',
-    #         with_labels=True)
+    nx.draw(G, node_size=100, cmap=plt.cm.Blues,
+            node_color=range(len(G)),
+            prog='dot',
+            with_labels=True)
