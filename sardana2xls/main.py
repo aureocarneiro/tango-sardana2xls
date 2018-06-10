@@ -29,6 +29,7 @@ controller_sheet = w_workbook.get_sheet(3)
 motor_sheet = w_workbook.get_sheet(4)
 pseudo_sheet = w_workbook.get_sheet(5)
 pool_sheet = w_workbook.get_sheet(1)
+global_sheet = w_workbook.get_sheet(0)
 
 
 default_properties = [
@@ -165,10 +166,17 @@ def proceed_pool(name, sheet):
     write_line(sheet, 1, line)
 
 
+def proceed_global(name, sheet):
+    write_line(sheet, 0, ("code", pool))
+    write_line(sheet, 1, ("name", pool))
+    write_line(sheet, 2, ("description",))
+    write_line(sheet, 3, ("",))
+    write_line(sheet, 4, ("prefix", "p1"))
+
 proceed_motors(motors, motor_sheet)
 proceed_pseudos(pseudos, pseudo_sheet)
 proceed_controllers(controllers, controller_sheet)
 proceed_pool(pool_name, pool_sheet)
-
+proceed_global(pool, global_sheet)
 
 w_workbook.save("template2.xls")
