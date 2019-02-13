@@ -95,7 +95,7 @@ def generate_class_mapping(devices, db):
 
 if __name__ == "__main__":
     db = tango.Database()
-    elements = get_elements("B110A-TMP", db)
+    elements = get_elements("Femtomax", db)
     aliases = generate_aliases_mapping(elements, db)
     ids = generate_id_mapping(elements, db)
     ctrl_ids = generate_prop_mapping(elements, db, 'ctrl_id')

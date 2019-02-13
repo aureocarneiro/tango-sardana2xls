@@ -4,27 +4,46 @@ from utils import generate_class_mapping
 import tango
 import xlrd
 from xlutils.copy import copy
+import pprint
 from functools import partial
 
-pool = "FlexPes"
+import logging
+
+# logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
+
+
 db = tango.Database()
+
+# Setup
+pool = "Femtomax"
+pool_server = "Pool/{}".format(pool)
+pool_name = db.get_device_name(pool_server, "Pool")[0]
+logging.info("Pool: {}".format(pool))
+logging.info("Server: {}".format(pool_server))
+logging.info("Pool device: {}".format(pool_name))
+
+
+# Prepare environment
 elements = get_elements(pool, db)
-print(elements)
+
+# Generate mapping
 aliases = generate_aliases_mapping(elements, db)
 ids = generate_id_mapping(elements, db)
-ctrl_ids = generate_prop_mapping(elements, db, 'ctrl_id')
-motor_ids = generate_prop_mapping(elements, db, 'motor_role_ids')
-pseudo_ids = generate_prop_mapping(elements, db, 'pseudo_motor_role_ids')
+ctrl_ids = generate_prop_mapping(elements, db, "ctrl_id")
+motor_ids = generate_prop_mapping(elements, db, "motor_role_ids")
+pseudo_ids = generate_prop_mapping(elements, db, "pseudo_motor_role_ids")
+
+# Class mapping
 classes = generate_class_mapping(elements, db)
+controllers = [k for k, v in classes.items() if v == "Controller"]
+motors = [k for k, v in classes.items() if v == "Motor"]
+pseudos = [k for k, v in classes.items() if v == "PseudoMotor"]
 
 
+# Open xls file
 r_workbook = xlrd.open_workbook("template.xls")
 w_workbook = copy(r_workbook)
-controllers = [k for k, v in classes.iteritems() if v == "Controller"]
-motors = [k for k, v in classes.iteritems() if v == "Motor"]
-pseudos = [k for k, v in classes.iteritems() if v == "PseudoMotor"]
-pool_name = "flexpes/pool/01"
-pool_server = "Pool/FlexPes"
 controller_sheet = w_workbook.get_sheet(3)
 motor_sheet = w_workbook.get_sheet(4)
 pseudo_sheet = w_workbook.get_sheet(5)
@@ -39,7 +58,8 @@ default_properties = [
     "pseudo_motor_role_ids",
     "type",
     "library",
-    "klass"]
+    "klass",
+]
 
 
 def get_property(ds, name):
@@ -47,8 +67,11 @@ def get_property(ds, name):
 
 
 def get_property_list(name):
-    return [p for p in db.get_device_property_list(name, "*")
-            if p not in default_properties]
+    return [
+        p
+        for p in db.get_device_property_list(name, "*")
+        if p not in default_properties
+    ]
 
 
 def get_properties(name):
@@ -74,12 +97,15 @@ def controller_data(name):
     ctrl_class = ctrl_prop("klass")
     ctrl_props = ";".join(get_properties(name))
     ctrl_elements = get_controller_elements(name, ctrl_type)
-    return [ctrl_type,
-            pool_name,
-            aliases[name],
-            ctrl_lib, ctrl_class,
-            ctrl_props,
-            ctrl_elements]
+    return [
+        ctrl_type,
+        pool_name,
+        aliases[name],
+        ctrl_lib,
+        ctrl_class,
+        ctrl_props,
+        ctrl_elements,
+    ]
 
 
 def write_line(sheet, line, data):
@@ -88,21 +114,33 @@ def write_line(sheet, line, data):
 
 
 def proceed_controllers(names, sheet):
-    for line, controller in enumerate(names):
-        data = controller_data(controller)
-        write_line(sheet, line+1, data)
+    ctrls = []
+    for ctrl in names:
+        data = controller_data(ctrl)
+        ctrls.append(data)
+    ctrls = sorted(ctrls, key=lambda x: (x[0], x[2]))
+    for line, data in enumerate(ctrls):
+        write_line(sheet, line + 1, data)
 
 
 def proceed_motors(names, sheet):
-    for line, motor in enumerate(names):
+    motors = []
+    for motor in names:
         data = motor_data(motor, "Motor")
-        write_line(sheet, line+1, data)
+        motors.append(data)
+    motors = sorted(motors, key=lambda x: (x[2], int(x[5])))
+    for line, data in enumerate(motors):
+        write_line(sheet, line + 1, data)
 
 
 def proceed_pseudos(names, sheet):
-    for line, motor in enumerate(names):
+    pseudos = []
+    for motor in names:
         data = motor_data(motor, "PseudoMotor")
-        write_line(sheet, line+1, data)
+        pseudos.append(data)
+    pseudos = sorted(pseudos, key=lambda x: (x[2], int(x[5])))
+    for line, data in enumerate(pseudos):
+        write_line(sheet, line + 1, data)
 
 
 mot_attributes = [
@@ -111,7 +149,8 @@ mot_attributes = [
     "Sign",
     "Offset",
     "Step_per_unit",
-    "UserEncoderSource"]
+    "UserEncoderSource",
+]
 
 
 def get_motor_attributes(name):
@@ -121,8 +160,10 @@ def get_motor_attributes(name):
     query = query.format(name)
     reply = tango_db.DbMySqlSelect(query)
     reply = reply[1]
-    answer = ["{}:{}".format(att, value)
-              for att, value in zip(reply[::2], reply[1::2])]
+    answer = [
+        "{}:{}".format(att, value)
+        for att, value in zip(reply[::2], reply[1::2])
+    ]
     return answer
 
 
@@ -140,15 +181,17 @@ def motor_data(name, mot_type):
     mot_instrument = ""
     mot_desc = ""
     mot_attributes = ";".join(get_motor_attributes(name))
-    return (mot_type,
-            mot_pool,
-            mot_ctrl,
-            mot_alias,
-            mot_device,
-            mot_axis,
-            mot_instrument,
-            mot_desc,
-            mot_attributes)
+    return (
+        mot_type,
+        mot_pool,
+        mot_ctrl,
+        mot_alias,
+        mot_device,
+        mot_axis,
+        mot_instrument,
+        mot_desc,
+        mot_attributes,
+    )
 
 
 def proceed_pool(name, sheet):
@@ -156,13 +199,15 @@ def proceed_pool(name, sheet):
     host = ":".join((db.get_db_host(), str(db.get_db_port())))
     pool_alias = db.get_alias_from_device(pool_name)
     prop = str(db.get_device_property(pool_name, "PoolPath")["PoolPath"])
-    line = ("Pool",
-            host,
-            pool_server,
-            '',      # Description
-            pool_alias,   # Alias
-            pool_name,
-            prop)
+    line = (
+        "Pool",
+        host,
+        pool_server,
+        "",  # Description
+        pool_alias,  # Alias
+        pool_name,
+        prop,
+    )
     write_line(sheet, 1, line)
 
 
@@ -173,10 +218,11 @@ def proceed_global(name, sheet):
     write_line(sheet, 3, ("",))
     write_line(sheet, 4, ("prefix", "p1"))
 
+
 proceed_motors(motors, motor_sheet)
 proceed_pseudos(pseudos, pseudo_sheet)
 proceed_controllers(controllers, controller_sheet)
 proceed_pool(pool_name, pool_sheet)
 proceed_global(pool, global_sheet)
 
-w_workbook.save("template2.xls")
+w_workbook.save("{}.xls".format(pool))
