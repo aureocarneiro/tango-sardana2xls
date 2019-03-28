@@ -16,7 +16,7 @@ logging.basicConfig(level=logging.DEBUG)
 db = tango.Database()
 
 # Setup
-pool = "FemtoMAX"
+pool = "Finest"
 pool_server = "Pool/{}".format(pool)
 pool_name = db.get_device_name(pool_server, "Pool")[0]
 logging.info("Pool: {}".format(pool))
@@ -26,7 +26,7 @@ logging.info("Pool device: {}".format(pool_name))
 
 # Prepare environment
 elements = get_elements(pool, db)
-
+print("controller/endstationmanipulator/a_ea01_mpb_01_ctrl" in elements)
 # Generate mapping
 aliases = generate_aliases_mapping(elements, db)
 ids = generate_id_mapping(elements, db)
@@ -36,7 +36,9 @@ pseudo_ids = generate_prop_mapping(elements, db, "pseudo_motor_role_ids")
 
 # Class mapping
 classes = generate_class_mapping(elements, db)
-controllers = [k for k, v in classes.items() if v == "Controller"]
+print("controller/endstationmanipulator/a_ea01_mpb_01_ctrl" in classes)
+controllers = [k for k, v in classes.items() if v.lower() == "controller"]
+print("controller/endstationmanipulator/a_ea01_mpb_01_ctrl" in controllers)
 motors = [k for k, v in classes.items() if v == "Motor"]
 pseudos = [k for k, v in classes.items() if v == "PseudoMotor"]
 iors = [k for k, v in classes.items() if v == "IORegister"]
@@ -91,9 +93,9 @@ def get_properties(name):
 def get_controller_elements(name, ctrl_type):
     elems = []
     if ctrl_type == "PseudoMotor":
-        for pseudo in pseudo_ids[name]:
+        for motor in motor_ids[name]:
             try:
-                elems.append(aliases[ids[pseudo]])
+                elems.append(aliases[ids[motor]])
             except KeyError as e:
                 print(e)
     return ";".join(elems)
@@ -106,10 +108,12 @@ def controller_data(name):
     ctrl_class = ctrl_prop("klass")
     ctrl_props = ";".join(get_properties(name))
     ctrl_elements = get_controller_elements(name, ctrl_type)
+    ctrl_device = name
     return [
         ctrl_type,
         pool_name,
         aliases[name],
+        ctrl_device,
         ctrl_lib,
         ctrl_class,
         ctrl_props,
@@ -126,6 +130,7 @@ def proceed_controllers(names, sheet):
     logging.info("Create controllers")
     ctrls = []
     for ctrl in names:
+        logging.info("{}".format(ctrl))
         data = controller_data(ctrl)
         ctrls.append(data)
     ctrls = sorted(ctrls, key=lambda x: (x[0], x[2]))
@@ -278,7 +283,9 @@ def proceed_pool(name, sheet):
     # get_properties
     host = ":".join((db.get_db_host(), str(db.get_db_port())))
     pool_alias = db.get_alias_from_device(pool_name)
-    prop = str(db.get_device_property(pool_name, "PoolPath")["PoolPath"])
+    prop = ""
+    for path in db.get_device_property(pool_name, "PoolPath")["PoolPath"]:
+        prop += "{}\n".format(path)
     line = (
         "Pool",
         host,
