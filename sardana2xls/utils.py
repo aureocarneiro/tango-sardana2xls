@@ -58,6 +58,10 @@ def get_elements(instance, db):
     return [name for name in names if 'dserver' not in name]
 
 
+def get_ms_elements(instance, db):
+    names = db.get_device_name("MacroServer/{}".format(instance), "*")
+    return [name for name in names if 'dserver' not in name]
+
 def generate_id_mapping(devices, db):
     id_map = unique_bidict()
     for name in devices:
@@ -79,6 +83,25 @@ def generate_aliases_mapping(devices, db):
     return alias_map
 
 
+def generate_instrument_list(pool, db):
+    instr_list = []
+    instr_prop = db.get_device_property(pool, "instrumentlist")["instrumentlist"]
+    for n in range(0,len(instr_prop),3):
+        instr_class = instr_prop[n]
+        instr_name = instr_prop[n+1]
+        instr_id = instr_prop[n+2]
+        instr_list.append((instr_class, instr_name, instr_id))
+    instr_list.sort(key=lambda a: a[2])
+    return instr_list
+
+
+def generate_instrument_mapping(instr_list):
+    id_map = unique_bidict()
+    for instr in instr_list:
+        id_map[instr[2]] = instr[1]
+    return id_map
+
+
 def generate_prop_mapping(devices, db, prop_name):
     id_map = dict()
     for name in devices:
@@ -87,6 +110,7 @@ def generate_prop_mapping(devices, db, prop_name):
             continue
         id_map[name] = prop
     return id_map
+
 
 
 def generate_class_mapping(devices, db):
