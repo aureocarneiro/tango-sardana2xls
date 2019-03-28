@@ -26,7 +26,6 @@ logging.info("Pool device: {}".format(pool_name))
 
 # Prepare environment
 elements = get_elements(pool, db)
-print("controller/endstationmanipulator/a_ea01_mpb_01_ctrl" in elements)
 # Generate mapping
 aliases = generate_aliases_mapping(elements, db)
 ids = generate_id_mapping(elements, db)
@@ -36,9 +35,7 @@ pseudo_ids = generate_prop_mapping(elements, db, "pseudo_motor_role_ids")
 
 # Class mapping
 classes = generate_class_mapping(elements, db)
-print("controller/endstationmanipulator/a_ea01_mpb_01_ctrl" in classes)
 controllers = [k for k, v in classes.items() if v.lower() == "controller"]
-print("controller/endstationmanipulator/a_ea01_mpb_01_ctrl" in controllers)
 motors = [k for k, v in classes.items() if v == "Motor"]
 pseudos = [k for k, v in classes.items() if v == "PseudoMotor"]
 iors = [k for k, v in classes.items() if v == "IORegister"]
