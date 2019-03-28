@@ -87,11 +87,17 @@ default_properties = [
     "type",
     "library",
     "klass",
+    "__SubDevices",
 ]
 
 
 def get_property(ds, name):
-    return db.get_device_property(ds, name)[name][0]
+    proplist = db.get_device_property(ds, name)[name]
+    if len(proplist)>1:
+        prop = '\\n'.join(proplist)
+    else:
+        prop = proplist[0]
+    return prop
 
 
 def get_property_list(name):
@@ -318,9 +324,7 @@ def proceed_pool(name, sheet):
     # get_properties
     host = ":".join((db.get_db_host(), str(db.get_db_port())))
     pool_alias = db.get_alias_from_device(pool_name)
-    prop = ""
-    for path in db.get_device_property(pool_name, "PoolPath")["PoolPath"]:
-        prop += "{}\n".format(path)
+    prop = '\n'.join(db.get_device_property(pool_name, "PoolPath")["PoolPath"])
     line = (
         "Pool",
         host,
@@ -337,12 +341,8 @@ def proceed_macroserver(name, sheet):
     # get_properties
     host = ":".join((db.get_db_host(), str(db.get_db_port())))
     ms_alias = db.get_alias_from_device(ms_name)
-    prop = ""
-    for path in db.get_device_property(ms_name, "MacroPath")["MacroPath"]:
-        prop += "{}\n".format(path)
-    pools = ""
-    for pool in db.get_device_property(ms_name, "PoolNames")["PoolNames"]:
-        pools += "{}\n".format(pool)
+    prop = '\n'.join(db.get_device_property(ms_name, "MacroPath")["MacroPath"])
+    pools = '\n'.join(db.get_device_property(ms_name, "PoolNames")["PoolNames"])
     line = (
         "MacroServer",
         host,
@@ -362,7 +362,7 @@ def proceed_doors(names ,sheet):
         data = (
             ms_server,
             ms_name,
-            "",  # Description
+            "enter description",  # Sardana dsconfig doesnt like empty description
             db.get_alias_from_device(name),
             name
         )
