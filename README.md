@@ -19,5 +19,6 @@ TANGO_HOST=your_tango_db_host:your_tango_db_port python sardana2xls/main.py {Poo
  - Requierment
  - CLI
  - Test
+ - Parameters
  
  
