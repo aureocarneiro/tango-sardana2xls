@@ -354,7 +354,7 @@ def main():
 
     #import xlrd
 
-    usage = "%prog [options] <pool_name pool_instance> "
+    usage = "%prog [options] <pool_instance> "
     parser = OptionParser(usage)
     options, args = parser.parse_args()
 
