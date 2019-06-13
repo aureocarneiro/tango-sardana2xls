@@ -356,16 +356,13 @@ def main():
 
     usage = "%prog [options] <pool_name pool_instance> "
     parser = OptionParser(usage)
-    parser.add_option("-h", "--help", dest="dump",
-                      help="Please pass your pool name")
-
     options, args = parser.parse_args()
 
     if len(args) == 0:
         logging.fatal("You need to provide at least a pool instance")
         sys.exit()
 
-    if options.dump:
+    if options.help:
         logging.fatal("Please pass your pool name")
         sys.exit()
 
