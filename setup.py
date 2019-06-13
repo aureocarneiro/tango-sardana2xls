@@ -2,7 +2,7 @@
 
 from setuptools import setup
 
-setup(name = "python-sardana2xls",
+setup(name = "sardana2xls",
       version = "1.0.0",
       description = ("Tool to generate a xls representation of an existing Tango Sardana environment"),
       author = "KITS Group",
