@@ -362,10 +362,6 @@ def main():
         logging.fatal("You need to provide at least a pool instance")
         sys.exit()
 
-    if options.help:
-        logging.fatal("Please pass your pool name")
-        sys.exit()
-
     db = tango.Database()
 
     # Setup
