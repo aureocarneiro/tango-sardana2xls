@@ -11,85 +11,6 @@ import sys
 
 import logging
 
-# logging.basicConfig(level=logging.INFO)
-logging.basicConfig(level=logging.DEBUG)
-
-
-db = tango.Database()
-
-# Setup
-pool = sys.argv[1]
-pool_server = "Pool/{}".format(pool)
-pool_name = db.get_device_name(pool_server, "Pool")[0]
-logging.info("Pool: {}".format(pool))
-logging.info("Server: {}".format(pool_server))
-logging.info("Pool device: {}".format(pool_name))
-ms_server = "MacroServer/{}".format(pool)
-ms_name = db.get_device_name(ms_server, "MacroServer")[0]
-logging.info("MacroServer: {}".format(ms_server))
-logging.info("MacroServer device: {}".format(ms_name))
-
-# Prepare environment
-elements = get_elements(pool, db)
-ms_elements = get_ms_elements(pool, db)
-print("controller/endstationmanipulator/a_ea01_mpb_01_ctrl" in elements)
-# Generate mapping
-aliases = generate_aliases_mapping(elements, db)
-ids = generate_id_mapping(elements, db)
-ctrl_ids = generate_prop_mapping(elements, db, "ctrl_id")
-motor_ids = generate_prop_mapping(elements, db, "motor_role_ids")
-pseudo_ids = generate_prop_mapping(elements, db, "pseudo_motor_role_ids")
-channel_ids = generate_prop_mapping(elements, db, "elements")
-instrument_list = generate_instrument_list(pool_name, db)
-instrument_ids = generate_instrument_mapping(instrument_list)
-
-
-# Class mapping
-classes = generate_class_mapping(elements, db)
-classes_ms = generate_class_mapping(ms_elements, db)
-print("controller/endstationmanipulator/a_ea01_mpb_01_ctrl" in classes)
-controllers = [k for k, v in classes.items() if v.lower() == "controller"]
-print("controller/endstationmanipulator/a_ea01_mpb_01_ctrl" in controllers)
-motors = [k for k, v in classes.items() if v == "Motor"]
-pseudos = [k for k, v in classes.items() if v == "PseudoMotor"]
-iors = [k for k, v in classes.items() if v == "IORegister"]
-measgrps = [k for k, v in classes.items() if v == "MeasurementGroup"]
-macroservers = [k for k, v in classes_ms.items() if v == "MacroServer"]
-doors = [k for k, v in classes_ms.items() if v == "Door"]
-channels = [
-    (k, v)
-    for k, v in classes.items()
-    if "counter" in v.lower() or "channel" in v.lower()
-]
-
-
-# Open xls file
-r_workbook = xlrd.open_workbook("template.xls")
-w_workbook = copy(r_workbook)
-door_sheet = w_workbook.get_sheet(2)
-controller_sheet = w_workbook.get_sheet(3)
-motor_sheet = w_workbook.get_sheet(4)
-pseudo_sheet = w_workbook.get_sheet(5)
-servers_sheet = w_workbook.get_sheet(1)
-global_sheet = w_workbook.get_sheet(0)
-ior_sheet = w_workbook.get_sheet(6)
-channel_sheet = w_workbook.get_sheet(7)
-measurment_sheet = w_workbook.get_sheet(8)
-acq_sheet = w_workbook.get_sheet(9)
-instr_sheet = w_workbook.get_sheet(11)
-
-
-default_properties = [
-    "id",
-    "ctrl_id",
-    "motor_role_ids",
-    "pseudo_motor_role_ids",
-    "type",
-    "library",
-    "klass",
-    "__SubDevices",
-]
-
 
 def get_property(ds, name):
     proplist = db.get_device_property(ds, name)[name]
@@ -289,7 +210,7 @@ def channel_data(name, _type):
     channel_alias = aliases[name]
     channel_name = name
     channel_axis = get_property(name, "Axis")
-    try: 
+    try:
         channel_instr = get_property(name, "instrument_id")
         channel_instrument = instrument_ids[channel_instr]
     except:
@@ -423,16 +344,100 @@ def proceed_instruments(instr_list, sheet):
         line_data = (instr_type, instr_pool, instr_name, instr_class)
         write_line(sheet, line + 1, line_data)
 
-proceed_motors(motors, motor_sheet)
-proceed_pseudos(pseudos, pseudo_sheet)
-proceed_controllers(controllers, controller_sheet)
-proceed_pool(pool_name, servers_sheet)
-proceed_macroserver(ms_name, servers_sheet)
-proceed_global(pool, global_sheet)
-proceed_iors(iors, ior_sheet)
-proceed_channel(channels, channel_sheet)
-proceed_measgrps(measgrps, acq_sheet)
-proceed_instruments(instrument_list, instr_sheet)
-proceed_doors(doors,door_sheet)
 
-w_workbook.save("{}.xls".format(pool))
+def main():
+    # logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=logging.DEBUG)
+
+
+    db = tango.Database()
+
+    # Setup
+    pool = sys.argv[1]
+    pool_server = "Pool/{}".format(pool)
+    pool_name = db.get_device_name(pool_server, "Pool")[0]
+    logging.info("Pool: {}".format(pool))
+    logging.info("Server: {}".format(pool_server))
+    logging.info("Pool device: {}".format(pool_name))
+    ms_server = "MacroServer/{}".format(pool)
+    ms_name = db.get_device_name(ms_server, "MacroServer")[0]
+    logging.info("MacroServer: {}".format(ms_server))
+    logging.info("MacroServer device: {}".format(ms_name))
+
+    # Prepare environment
+    elements = get_elements(pool, db)
+    ms_elements = get_ms_elements(pool, db)
+    print("controller/endstationmanipulator/a_ea01_mpb_01_ctrl" in elements)
+    # Generate mapping
+    aliases = generate_aliases_mapping(elements, db)
+    ids = generate_id_mapping(elements, db)
+    ctrl_ids = generate_prop_mapping(elements, db, "ctrl_id")
+    motor_ids = generate_prop_mapping(elements, db, "motor_role_ids")
+    pseudo_ids = generate_prop_mapping(elements, db, "pseudo_motor_role_ids")
+    channel_ids = generate_prop_mapping(elements, db, "elements")
+    instrument_list = generate_instrument_list(pool_name, db)
+    instrument_ids = generate_instrument_mapping(instrument_list)
+
+
+    # Class mapping
+    classes = generate_class_mapping(elements, db)
+    classes_ms = generate_class_mapping(ms_elements, db)
+    print("controller/endstationmanipulator/a_ea01_mpb_01_ctrl" in classes)
+    controllers = [k for k, v in classes.items() if v.lower() == "controller"]
+    print("controller/endstationmanipulator/a_ea01_mpb_01_ctrl" in controllers)
+    motors = [k for k, v in classes.items() if v == "Motor"]
+    pseudos = [k for k, v in classes.items() if v == "PseudoMotor"]
+    iors = [k for k, v in classes.items() if v == "IORegister"]
+    measgrps = [k for k, v in classes.items() if v == "MeasurementGroup"]
+    macroservers = [k for k, v in classes_ms.items() if v == "MacroServer"]
+    doors = [k for k, v in classes_ms.items() if v == "Door"]
+    channels = [
+        (k, v)
+        for k, v in classes.items()
+        if "counter" in v.lower() or "channel" in v.lower()
+    ]
+
+
+    # Open xls file
+    r_workbook = xlrd.open_workbook("template.xls")
+    w_workbook = copy(r_workbook)
+    door_sheet = w_workbook.get_sheet(2)
+    controller_sheet = w_workbook.get_sheet(3)
+    motor_sheet = w_workbook.get_sheet(4)
+    pseudo_sheet = w_workbook.get_sheet(5)
+    servers_sheet = w_workbook.get_sheet(1)
+    global_sheet = w_workbook.get_sheet(0)
+    ior_sheet = w_workbook.get_sheet(6)
+    channel_sheet = w_workbook.get_sheet(7)
+    measurment_sheet = w_workbook.get_sheet(8)
+    acq_sheet = w_workbook.get_sheet(9)
+    instr_sheet = w_workbook.get_sheet(11)
+
+
+    default_properties = [
+        "id",
+        "ctrl_id",
+        "motor_role_ids",
+        "pseudo_motor_role_ids",
+        "type",
+        "library",
+        "klass",
+        "__SubDevices",
+    ]
+
+    proceed_motors(motors, motor_sheet)
+    proceed_pseudos(pseudos, pseudo_sheet)
+    proceed_controllers(controllers, controller_sheet)
+    proceed_pool(pool_name, servers_sheet)
+    proceed_macroserver(ms_name, servers_sheet)
+    proceed_global(pool, global_sheet)
+    proceed_iors(iors, ior_sheet)
+    proceed_channel(channels, channel_sheet)
+    proceed_measgrps(measgrps, acq_sheet)
+    proceed_instruments(instrument_list, instr_sheet)
+    proceed_doors(doors,door_sheet)
+
+    w_workbook.save("{}.xls".format(pool))
+
+if __name__ == '__main__':
+    main()
