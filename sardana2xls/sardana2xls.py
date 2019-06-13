@@ -8,6 +8,7 @@ from xlutils.copy import copy
 import pprint
 from functools import partial
 import sys
+import os
 
 import logging
 
@@ -352,8 +353,6 @@ def main():
 
     from optparse import OptionParser
 
-    #import xlrd
-
     usage = "%prog [options] <pool_instance> "
     parser = OptionParser(usage)
     options, args = parser.parse_args()
@@ -411,7 +410,7 @@ def main():
 
 
     # Open xls file
-    r_workbook = xlrd.open_workbook("template.xls")
+    r_workbook = xlrd.open_workbook("{}/template/template.xls".format(os.path.dirname(os.path.realpath(__file__))))
     w_workbook = copy(r_workbook)
     door_sheet = w_workbook.get_sheet(2)
     controller_sheet = w_workbook.get_sheet(3)
@@ -449,7 +448,7 @@ def main():
     proceed_instruments(instrument_list, instr_sheet)
     proceed_doors(doors,door_sheet)
 
-    w_workbook.save("{}.xls".format(pool))
+    w_workbook.save("{}/{}.xls".format(os.getcwd(), pool))
 
 if __name__ == '__main__':
     main()
