@@ -346,14 +346,33 @@ def proceed_instruments(instr_list, sheet):
 
 
 def main():
+
     # logging.basicConfig(level=logging.INFO)
     logging.basicConfig(level=logging.DEBUG)
 
+    from optparse import OptionParser
+
+    #import xlrd
+
+    usage = "%prog [options] <pool_name pool_instance> "
+    parser = OptionParser(usage)
+    parser.add_option("-h", "--help", dest="dump",
+                      help="Please pass your pool name")
+
+    options, args = parser.parse_args()
+
+    if len(args) == 0:
+        logging.fatal("You need to provide at least a pool instance")
+        sys.exit()
+
+    if options.dump:
+        logging.fatal("Please pass your pool name")
+        sys.exit()
 
     db = tango.Database()
 
     # Setup
-    pool = sys.argv[1]
+    pool = args[0]
     pool_server = "Pool/{}".format(pool)
     pool_name = db.get_device_name(pool_server, "Pool")[0]
     logging.info("Pool: {}".format(pool))
