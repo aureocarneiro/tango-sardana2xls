@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-from setuptools import setup
+from setuptools import setup, find_packages
 
 setup(name = "sardana2xls",
       version = "1.0.0",
@@ -9,7 +9,7 @@ setup(name = "sardana2xls",
       author_mail = "kits@maxiv.lu.se",
       license = "GPLv3",
       url = "http://www.maxlab.lu.se",
-      packages =["sardana2xls"],
+      packages = find_packages(),
       entry_points={
           "console_scripts": ["sardana2xls = sardana2xls.sardana2xls:main"]},
       install_requires=["setuptools", "pytango", "xlrd"],
