@@ -9,16 +9,14 @@ import pprint
 from functools import partial
 import sys
 import os
-
+import argparse
 import logging
 
 # logging.basicConfig(level=logging.INFO)
 logging.basicConfig(level=logging.DEBUG)
 
-from optparse import OptionParser
-
 usage = "%prog [options] <pool_instance> "
-parser = OptionParser(usage)
+parser = argparse(usage)
 options, args = parser.parse_args()
 
 if len(args) == 0:
@@ -74,7 +72,9 @@ channels = [
 
 
 # Open xls file
-r_workbook = xlrd.open_workbook("{}/template/template.xls".format(os.path.dirname(os.path.realpath(__file__))))
+module_path = os.path.dirname(os.path.realpath(__file__))
+template_path = "{}/template/template.xls".format(module_path)
+r_workbook = xlrd.open_workbook(template_path)
 w_workbook = copy(r_workbook)
 door_sheet = w_workbook.get_sheet(2)
 controller_sheet = w_workbook.get_sheet(3)
